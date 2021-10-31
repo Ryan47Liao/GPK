@@ -1108,6 +1108,23 @@ def Fetch_plan_null(Loaded , Sections =['Priority_Task','Special_Task']):
                 OUT['Inbox'].append(Gtask)
     return OUT
 
+def Reward(time,difficulty,random = False):
+    "Return Rewards Based on Time and Difficulty"
+    time_lower_bound = 0.35
+    time_upper_bound = 5
+    difficulty_upper_bound = 10
+    if time < time_lower_bound:
+        time = time_lower_bound
+    if time > time_upper_bound:
+        time = time_upper_bound
+    if difficulty > difficulty_upper_bound:
+        difficulty = difficulty_upper_bound
+    difficulty = abs(difficulty)
+    reward = 3*(time**0.6*difficulty**0.4)
+    if random:
+       reward +=  random.choice([-0.5,0,0.5,1,1.5,2])
+    return(round(reward))
+
 class Gpk_ToDoList:
     def __init__(self):
         self.todos = pd.DataFrame({"ID":[ ],"TaskName":[ ],"Reward":[ ],

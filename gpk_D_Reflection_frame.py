@@ -769,7 +769,7 @@ if __name__ == '__main__':
         # 9. Week Plan Orientation Stack Bar 
         print('\n->Checking:9. Week Plan Orientation Stack Bar ')
         fig = plt.Figure()
-        T.Analysis.fig =  T.RADAR_DPD(2,fig,NORMALIZE = True,sec = 'Reward')
+        T.Analysis.fig =  T.RADAR_DPD(2,fig,NORMALIZE = True,sec = 'Reward',Recur_Show=False)
         T.Analysis.fig_preview()
     else:
         root = tk.Tk()

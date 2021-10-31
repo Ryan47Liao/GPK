@@ -35,7 +35,7 @@ class gpk_weekView(tk.Frame):
         "Create a Canvas Frame"
         self.Canvas_height_coef = 1/2 
         self.Canvas_width_coef = 2/3
-        self.Canvas_Frame = tk.Frame( master = master, bd = 30 )###, bg = 'green')
+        self.Canvas_Frame = tk.Frame( master = master, bd = 30 )##, bg = 'green')
         self.Canvas_Frame.configure(height = self.Canvas_height_coef*self.height,
                                   width = self.Canvas_width_coef*self.width)
         self.Canvas_Frame.config(highlightbackground="black" , highlightthickness=2)
@@ -120,7 +120,7 @@ class gpk_weekView(tk.Frame):
         
     def _draw(self):
         #__________________LeftFrame_____________________#
-        self.LeftFrame = tk.Frame(master = self)##, bg = 'blue')
+        self.LeftFrame = tk.Frame(master = self)#, bg = 'blue')
         self.LeftFrame.config(width = 4*self.width/5, height = self.height)
         self.LeftFrame.config(highlightbackground="black" , highlightthickness=2)
         self.LeftFrame.grid(row = 0, column = 0 ,padx=200, pady=20
@@ -133,18 +133,18 @@ class gpk_weekView(tk.Frame):
         self.OKRLOG_Text.configure(font=("Times New Roman", 14, "bold"))
         self.OKRLOG_Text.pack()
         #__________________RightFrame_____________________#
-        self.RightFrame = tk.Frame(master = self)##, bg = 'green')
+        self.RightFrame = tk.Frame(master = self)#, bg = 'green')
         self.RightFrame.config(width = 2*self.width/5, height = self.height)
         self.RightFrame.grid(row = 0, column = 1)#.pack(side = tk.LEFT)
         
                             ##_________Canvas Frame________##
-        self.CF = tk.Frame(master = self.RightFrame)##, bg = 'orange')
+        self.CF = tk.Frame(master = self.RightFrame)#, bg = 'orange')
         self.CF.config(width = 2*self.width/5, height = (2/3)*self.height)
         self.CF.pack()
 
         
             ##_________Interaction Frame________##
-        self.InterFrame = tk.Frame(master = self.RightFrame)##, bg = 'orange')
+        self.InterFrame = tk.Frame(master = self.RightFrame)#, bg = 'orange')
         self.InterFrame.config(width = 2*self.width/5, height = (1/3)*self.height)
         self.InterFrame.pack()
                 ###___Radio Buttons___###
@@ -218,17 +218,9 @@ class gpk_weekPlanning(tk.Frame):
         
     def show_detail(self,event = None):
         PROFILE = self.callback(Return = True)
-        try:
-            self.PlanView.retrieve() #Update the selected 
-            self.ID = self.PlanView.selected.get().split(":")[1].strip(" ")
-        except IndexError: #Selelcting from INbox
-            try:
-                selected_id = self.INbox_detail.retrieve()
-            except Exception as e:
-                print('<weekplan>-<show_detail> fail to retrieve info')
-            self.PlanView.selected.set(selected_id)
-            self.ID = self.INbox_detail.selected.get().split(":")[1].strip(" ")
-        Gtask = self.Locate(PROFILE.todos.Load,self.ID)
+        self.PlanView.retrieve() #Update the selected 
+        ID = self.PlanView.selected.get().split(":")[1].strip(" ")
+        Gtask = self.Locate(PROFILE.todos.Load,ID)
         Info = str(Gtask)
         try:
             self.PlanView.Text_refresh(Info)
@@ -357,8 +349,7 @@ class gpk_weekPlanning(tk.Frame):
         self.callback(Profile,Update = True)
         self.Get_Option()
         self.LB_Ref()
-        self.CF_update(master = self.CF )
-        self.INbox_Ref()
+        self.CF_update(master = self.CF ) 
         
     def IMPORT(self):
         #Update Profile
@@ -392,17 +383,12 @@ class gpk_weekPlanning(tk.Frame):
         self.LB_Ref()
         #TRY to Plot
         self.CF_update(master = self.CF)
-        #Also Refresh INbox F
-        self.INbox_Ref()
         
     def MOVE(self):
-        try:
-            ID = self.ID#self.PlanView.selected.get().split(':')[1]
-        except:
-            messagebox.showinfo("Task not Selected","Select the task from the listbox you wish to move")
+        ID = self.PlanView.selected.get().split(':')[1]
         Sec = self.day_option.get()
-        # if ID == 'Select and Submit to update':
-        #     messagebox.showinfo("Task not Selected","Select the task from the listbox you wish to move")
+        if ID == 'Select and Submit to update':
+            messagebox.showinfo("Task not Selected","Select the task from the listbox you wish to move")
         if Sec == '':
             messagebox.showinfo("Section not Selected","Please first select section from the com box")
 
@@ -412,6 +398,8 @@ class gpk_weekPlanning(tk.Frame):
     def Get_Option(self):
         try:
             self.Options = list(self.callback(Return = True).okr_plan.keys())
+            self.day_option = ttk.Combobox(self.Control_Frame, values = self.Options)
+            self.day_option.grid(row = 2,column = 2)
         except:
             self.Options = ['Plan Not Loaded']
             print('Plan Not Loaded')
@@ -419,15 +407,15 @@ class gpk_weekPlanning(tk.Frame):
     ## Adding Canvas Mods:
     def CF_create(self,master,hc = 2/3, wc = 2/5,side = None):
         "Create a Canvas Frame"
-        self.Canvas_height_coef = 1/2
-        self.Canvas_width_coef = 4/9 
-        self.Canvas_Frame = tk.Frame( master = master, bd = 0 )###, bg = 'green')
+        self.Canvas_height_coef = 3/4 
+        self.Canvas_width_coef = 2/3
+        self.Canvas_Frame = tk.Frame( master = master, bd = 0 )##, bg = 'green')
         self.Canvas_Frame.configure(height = self.Canvas_height_coef*self.height,
                                   width = self.Canvas_width_coef*self.width)
         self.Canvas_Frame.config(highlightbackground="black" , highlightthickness= 2)
         self.Canvas_Frame.pack(side = tk.TOP, anchor = 'n')
         
-    def CF_update(self , master ): #Plotting
+    def CF_update(self , master ):
         try:
             self.Canvas_Frame.destroy()
         except AttributeError:
@@ -438,12 +426,19 @@ class gpk_weekPlanning(tk.Frame):
         df = Plan_to_df(PROFILE) 
         self.Analysis.Set_df(df)
         self.Analysis.Rest_fig() 
+    ##OLD
+        # self.Analysis.Plot_DateFrame(Group = 'Plan_at',
+        #                              title = 'Time(Top)/Reward(Buttom) Dist of Current Plan',dim = 211,short = True)
+        # self.Analysis.Plot_DateFrame(Group = 'Plan_at',sec = 'Reward',
+        #                              title = '',dim = 212,short = True)
+        # self.Analysis.Plot_Sec(sec = 'weight', dim = 211, title = 'Weight Distribution')
+        # self.Analysis.Plot_Sec(sec = 'weight', df = df[df['Task_Type'] == self.View.get()],
+        #                        dim = 212 ,  title = f'Weight Dist of {self.View.get()}')
+        #Finally:
+        #self.fig = self.Analysis.get_fig()
     ###NEW:Agg Plot
         T = D_Reflection(PROFILE, PROFILE.todos.Archive)
-        my_dpi = self.root.winfo_fpixels('1i')
-        pic_w = (4/9)*self.width
-        pic_h = (1/2)*self.height
-        fig = plt.Figure(figsize=(pic_w/my_dpi, pic_h/my_dpi), dpi=my_dpi)
+        fig = plt.Figure(figsize = (11,4))
         self.fig = T.Plot_plan_color(fig,section = 'Time', 
                                      RECUR_show= self.Recur_show.get(),
                                      Completed_show = self.Completed_show.get())
@@ -451,235 +446,25 @@ class gpk_weekPlanning(tk.Frame):
         self.canvas = FigureCanvasTkAgg(self.fig,self.Canvas_Frame)
         self.canvas.draw()
         self.canvas.get_tk_widget().pack(side = tk.TOP, anchor = 'n')
-        
-    ### Radar_CF: Updated 2021/9/4
-    def RCF_create(self,master):
-        Canvas_height_coef = (3/4)*(1/2)
-        Canvas_width_coef = (2/9)
-        self.R_CF = tk.Frame(master= master)#, bg = 'blue')
-        self.R_CF.config(width = Canvas_width_coef*self.width, height = Canvas_height_coef*self.height)
-        self.R_CF.pack(side = tk.TOP, fill = 'y')  
-        self.R_CF.grid_propagate(False)   
-     
-    def RCF_update(self, master ): #Plotting the Radar
-        try:
-            self.R_CF.destroy()
-        except AttributeError:
-            pass 
-        self.RCF_create(master = master)
-        #Plotting 
-        PROFILE = self.callback(Return = True)
-        T = D_Reflection(PROFILE, PROFILE.todos.Archive)
-        #Set fig size
-        my_dpi = self.root.winfo_fpixels('1i')
-        pic_w = (2/9)*self.width
-        pic_h = (3/4)*(1/2)*self.height
-        fig = plt.Figure(figsize=(pic_w/my_dpi, pic_h/my_dpi), dpi=my_dpi)
-        
-        fig = T.RADAR_DPD(weekday = D_rev[self.Radar_day.get()],fig = fig,Recur_Show = False)
-    ###Finally:
-        self.Rcanvas = FigureCanvasTkAgg(fig,self.R_CF)
-        self.Rcanvas.draw()
-        self.Rcanvas.get_tk_widget().pack(side = tk.TOP, anchor = 'n')
-        #Also Ref Text:
-        self.OD_txt_ref()
-    
-    ### OverDue Tasks Ref:
-    def OD_txt_create(self):
-        try:
-            self.OVER_Due_txt_Frame.destroy()
-        except:
-            pass 
-        self.OVER_Due_txt_Frame = tk.Frame(master= self.RF)#, bg = 'red')
-        self.OVER_Due_txt_Frame.config(width = (2/9)*self.width, height = (1/6)*(1/2)*self.height)
-        self.OVER_Due_txt_Frame.pack(side = tk.TOP, fill = 'y',anchor = 's')
-        self.OVER_Due_txt_Frame.grid_propagate(False)
-        self.OVER_Due_txt_Frame.columnconfigure(0, weight=10)  
-        
-        self.OD_txt = tk.Text(master=self.OVER_Due_txt_Frame)
-        self.OD_txt.grid(sticky="we")
-    
-    def OD_txt_ref(self):
-        "Update the text with tasks that are over due"
-        self.OD_txt_create()
-        PROFILE = self.callback(Return = True)
-        plan = PROFILE.okr_plan 
-        wkday = self.Radar_day.get()
-        ##Decide if all tasks assigned to that day is already due
-        OVER_DUE = []
-        date_inspect = wkday_to_date(wkday)
-        for Gtask in plan[wkday]:
-            if DATE(Gtask.Deadline) < DATE(date_inspect):
-                OVER_DUE.append(Gtask)
-        text = f'Overdue Tasks on {wkday}({date_inspect}):\n'
-        if len(OVER_DUE) > 0:
-            for count,Gtask in enumerate(OVER_DUE):
-                count += 1 
-                text += f'{count}.{Gtask.ID}|{Gtask.name}|Due:{Gtask.Deadline}\n'
-        else:
-            text += 'None'
-        #Ref Text:
-        self.OD_txt.delete("1.0","end")
-        self.OD_txt.insert("1.0", text)
-    
-    ### INbox Detail: Updated 2021/9/4
-    def INbox_Ref(self,INbox_list = None,
-                 Orientation = {1:'Health',2:'Family',3:'Personal Dev',4:'Career'}):
-        if INbox_list is None:
-            INbox_list = self.callback(Return = True).okr_plan['Inbox']
-        #Step 1: Sort:'deadline','Time','Reward'
-        if self.INbox_sort.get() == 'deadline':
-            LST_sort = sorted(INbox_list,key = lambda Gtask: DATE(Gtask.Deadline))
-        elif self.INbox_sort.get() == 'Reward':
-            LST_sort = sorted(INbox_list,key = lambda Gtask: Reward(float(Gtask.Time),float(Gtask.Difficulty)))
-        elif self.INbox_sort.get() == 'Time':
-            LST_sort = sorted(INbox_list,key = lambda Gtask: float(Gtask.Time))
-        else: #Dont sort
-            LST_sort = list(INbox_list)
-        #Step 1.5:Clear
-        self.INbox_detail.LB_Clear()
-        #Step 2: Divide by Orientation
-        for Orient in Orientation.values():
-            #Get Lst:
-            LST = []
-            for Gtask in LST_sort:
-                if Orientation[int(Gtask.ID.split("_")[1][1])] == Orient:
-                    LST.append(Gtask.ID)
-            #LST = [Gtask for Gtask in LST_sort if Orientation[Gtask.ID.split("_")[1][1]] == Orient]
-            #Finally:
-            self.INbox_detail.INSERT(Orient,LST)
             
     def _draw(self):
-        self.sync_ref_img = ImageTk.PhotoImage(Image.open(os.getcwd() + "/Pictures/sync_refresh.ico"))
-    #___________LeftFrame______________#
+        #___________LeftFrame______________#
         self.LeftFrame = tk.Frame(master = self)#, bg = 'orange')
-        self.LeftFrame.config(width = (2/3)*self.width, height = self.height,
-                              highlightbackground="black" , highlightthickness=1, #Add border
-                              padx = 15)#
-        self.LeftFrame.pack(side = tk.LEFT, fill = 'x', expand = 'yes')
-        self.LeftFrame.grid_propagate(False)
-        
+        self.LeftFrame.config(width = self.width/2, height = self.height,
+                              padx = 15)
+        self.LeftFrame.pack(side = tk.LEFT, fill = 'x')
         ##PlanOverview (Plan Box) 
         self.Plan_BOX = tk.Frame(self.LeftFrame)
         self.Plan_BOX.pack(side = tk.TOP)
-                
-        ## Visual Frame 
-        self.Visual_Frame = tk.Frame(master= self.LeftFrame)#, bg = 'green')
-        self.Visual_Frame.config(width = (2/3)*self.width, height = self.height/2)
-        self.Visual_Frame.pack(side = tk.BOTTOM, fill = 'x')
-        
-        ##Canvas Frame 
-        self.CF = tk.Frame(master= self.Visual_Frame)#, bg = 'purple')
-        self.CF.config(width = (4/9)*self.width, height = (1/2)*self.height)
-        self.CF.pack(side = tk.LEFT, fill = 'y')      
-                     
-        # ##Deadline Frame
-        # self.DF = tk.Frame(master= self.Visual_Frame#, bg = 'blue')
-        # self.DF.config(width = (1/18)*self.width, height = (1/2)*self.height)
-        # self.DF.pack(side = tk.LEFT, fill = 'y')     
-        ##Radar Frame
-        self.RF = tk.Frame(master= self.Visual_Frame)#, bg = 'yellow')
-        self.RF.config(width = (2/9)*self.width, height = (1/2)*self.height)
-        self.RF.pack(side = tk.LEFT, fill = 'y')     
-    
-        ### Radar Control
-        self.R_control_frame = tk.Frame(master= self.RF)#, bg = 'blue')
-        self.R_control_frame.pack(side = tk.TOP, fill = 'y')
-        ### Radar Options
-        self.Radar_day = ttk.Combobox(self.R_control_frame, values = list(D.values()), width=12)
-        self.Radar_day.set('monday')
-        self.Radar_day.grid(row = 0, column = 0,padx = 5, pady = 5)
-        self.RCF_ref_btn = tk.Button(master =self.R_control_frame, image  =  self.sync_ref_img , 
-                                     command = lambda:self.RCF_update(master = self.RF))
-        self.RCF_ref_btn.grid(row = 0, column = 1)
-        
-        ### RCF
-        self.R_CF = tk.Frame(master= self.RF)#, bg = 'blue')
-        self.R_CF.config(width = (2/9)*self.width, height = (3/4)*(1/2)*self.height)
-        self.R_CF.pack(side = tk.TOP, fill = 'y')     
-
-        ### TEXT
-
-        
-    #___________RightFrame______________#
-        self.RightFrame = tk.Frame(master = self)#, bg = 'pink')
-        self.RightFrame.config(width = (1/3)*self.width, height = self.height,
-                              highlightbackground="black" , highlightthickness=1)
-        self.RightFrame.pack(side = tk.LEFT, fill = 'x', expand = 'yes')
-        self.RightFrame.grid_propagate(False)
         ## Objective Details
-        self.Oview = tk.Frame(master= self.RightFrame)#, bg = 'blue')
-        self.Oview.config(width = (1/3)*self.width, height = self.height/3)
-        self.Oview.pack(side = tk.TOP, fill = 'x')
-        
-        ## INbox Details
-        self.INbox_view = tk.Frame(master= self.RightFrame)#, bg = 'pink')
-        self.INbox_view.config(width = (1/3)*self.width, height = self.height/3)
-        self.INbox_view.pack(side = tk.TOP, fill = 'x')
-        
-        ## Control Panel
-        self.Control_Frame = tk.Frame(master= self.RightFrame)#, bg = 'purple')
-        self.Control_Frame.config(width = (1/3)*self.width, height = self.height/3)
-        self.Control_Frame.pack(side = tk.TOP, fill = 'x')
-        ###Spacer
-        #tk.Label(self.Control_Frame, text = '      ').grid(row = 0, column = 0,padx = 20)
-            #### Move Buttons
-        self.Move_btn = tk.Button(self.Control_Frame,text = 'Move to:',padx = 5)
-        self.Move_btn.grid(row = 1, column = 1,padx=10, pady=10)
-        self.Get_Option()
-        self.day_option = ttk.Combobox(self.Control_Frame, values = self.Options)
-        self.day_option.grid(row = 1,column = 2)
-        self.Move_btn.config(command = self.MOVE)
-        
-                ### Plot Filter:
-        self.Recur_show = tk.IntVar()
-        self.Rec_show_ckbx = tk.Checkbutton(self.Control_Frame,text = 'Show Recursive Tasks', variable = self.Recur_show,
-                                            command = lambda:self.CF_update(master = self.CF ) )
-        self.Rec_show_ckbx.grid(row = 2,column = 1)
-        self.Completed_show = tk.IntVar()
-        self.Completed_show_ckbx = tk.Checkbutton(self.Control_Frame,text = 'Show Completed Goals', 
-                                                  variable = self.Completed_show,
-                                                  command = lambda:self.CF_update(master = self.CF ) )
-        self.Completed_show_ckbx.grid(row = 2,column = 2, padx = 10)
-        
-            #### MTK Sync Buttons 
-            #Add Mtk Sync Status 
-        self.sync_status = tk.IntVar()
-        self.sync_chbx = tk.Checkbutton(self.Control_Frame, variable =self.sync_status,
-                                        onvalue=1, offvalue=0, command = self.check_mtk_sync_status)
-        self.sync_chbx.grid(padx = 20,row = 3, column = 1)
-        self.rmchbox_label = tk.Label (self.Control_Frame,text = "MTK SYNC")
-        self.rmchbox_label.grid(row = 3, column = 2)
-            #Add Sync Button 
-        self.SYNC_btn = tk.Button(master =self.Control_Frame, image  =  self.sync_ref_img , 
-                                  command = self.mtk_sync)
-        self.SYNC_btn.grid(padx = 20,row = 3, column = 3)
-        
-            #### Notion Sync Buttons 
-                #Add Notion Sync Status 
-        self.NOTION_sync_status = tk.IntVar()
-        self.NOTION_sync_chbx = tk.Checkbutton(self.Control_Frame, variable =self.sync_status,
-                                        onvalue=1, offvalue=0, command = self.check_mtk_sync_status)
-        self.NOTION_sync_chbx.grid(padx = 20,row = 4, column = 1)
-        self.NOTION_rmchbox_label = tk.Label (self.Control_Frame,text = "Notion SYNC")
-        self.NOTION_rmchbox_label.grid(row = 4, column = 2)
-                #Add Notion Button 
-        self.NOTION_SYNC_btn = tk.Button(master =self.Control_Frame, image  =  self.sync_ref_img , 
-                                  command = self.mtk_sync)
-        self.NOTION_SYNC_btn.grid(padx = 20,row = 4, column = 3)
+        self.Oview = tk.Frame(master= self.LeftFrame)#, bg = 'blue')
+        self.Oview.config(width = self.width/2, height = self.height/2)
+        self.Oview.pack(side = tk.BOTTOM, fill = 'x')
         
         
-        self.Import_btn = tk.Button(self.Control_Frame,text = 'Import OKRLOG',
-                                    font = ('times new roman',20))
-        self.Import_btn.config(command = self.IMPORT)
-        self.Import_btn.grid(row = 5, column = 2,padx=10, pady=10)
-        
-        
-        #____________________Configs___________________#
         ##_PlanView under Plan_BOX##
         self.PlanView = tkLIST(self.Plan_BOX,n=8,bg = 'green',show_sub = True,
-                               view_frame = self.Oview,
-                               header = [
+                               view_frame = self.Oview , header = [
         'Inbox','monday','tuesday','wednesday',
          'thursday','friday','saturday','sunday'])
         for listbox in self.PlanView.LISTBOXes:
@@ -688,39 +473,73 @@ class gpk_weekPlanning(tk.Frame):
             self.LB_Ref()
         except AttributeError:
             pass 
-            
-        ##INbox detail##
-        tk.Label(self.INbox_view, text = '  ').grid(row = 0, column = 0)
-        tk.Label(self.INbox_view, text = 'INbox Order by:').grid(row = 0, column = 2)
-        self.INbox_sort = ttk.Combobox(self.INbox_view, values = ['deadline','Time','Reward'],
-                                      width=12)
-        self.INbox_sort.grid(row = 0, column = 3,padx = 5, pady = 5)
-        self.INbox_ref_btn = tk.Button(master =self.INbox_view, image  =  self.sync_ref_img , 
-                                  command = self.INbox_Ref)
-        self.INbox_ref_btn.grid(row = 0, column = 4,padx = 5, pady = 5)
-        self.INbox_detail = tkLIST(self.INbox_view, base_row = 1, base_col = 0, 
-                                   show_sub = True, TEXT = self.PlanView.TEXT,
-                                   view_frame = self.Oview, n =4, 
-                  header = ['Health','Family','Personal Dev','Career'])
-        for listbox in self.INbox_detail.LISTBOXes:
-            listbox.bind("<<ListboxSelect>>", self.show_detail)
-            
-        ##Inbox Frame Update:
-        try:
-            self.INbox_Ref()
-        except Exception as e:
-            print("<WeekPlan> INbox Fail to Initialize due to ", e)
-            
-        ## Canvas Frame Update  
+        
+        #___________RightFrame______________#
+        self.RightFrame = tk.Frame(master = self)#, bg = 'pink')
+        self.RightFrame.config(width = self.width/2, height = self.height)
+        self.RightFrame.pack(side = tk.LEFT, fill = 'x')
+        
+            ## Canvas Frame
+        self.CF = tk.Frame(master= self.RightFrame)#, bg = 'purple')
+        self.CF.config(width = self.width/2, height = (3/4)*self.height)
+        self.CF.pack(side = tk.TOP, fill = 'both')                
+                
+            ## Control Frame 
+
+        self.Control_Frame = tk.Frame(master= self.RightFrame)#, bg = 'purple')
+        self.Control_Frame.config(width = self.width/2, height = self.height/4)
+        self.Control_Frame.pack(side = tk.TOP, fill = 'both')                
+                ### Buttons 
+###SPACER
+        self.spacer = tk.Label(master = self.Control_Frame,text = "",
+                               padx = 35)
+        self.spacer.grid(row = 0,column = 0)
+    ### Plot Filter:
+        self.Recur_show = tk.IntVar()
+        self.Rec_show_ckbx = tk.Checkbutton(self.Control_Frame,text = 'Show Recursive Tasks', variable = self.Recur_show,
+                                            command = lambda:self.CF_update(master = self.CF ) )
+        self.Rec_show_ckbx.grid(row = 0,column = 1)
+        self.Completed_show = tk.IntVar()
+        self.Completed_show_ckbx = tk.Checkbutton(self.Control_Frame,text = 'Show Completed Goals', 
+                                                  variable = self.Completed_show,
+                                                  command = lambda:self.CF_update(master = self.CF ) )
+        self.Completed_show_ckbx.grid(row = 0,column = 2, padx = 10)
+                #### Move Buttons
+        self.Import_btn = tk.Button(self.Control_Frame,text = 'Import OKRLOG',
+                                    font = ('times new roman',20))
+        self.Import_btn.config(command = self.IMPORT)
+        self.Import_btn.grid(row = 1, column = 2,padx=10, pady=10)
+        self.Move_btn = tk.Button(self.Control_Frame,text = 'Move to:',padx = 5)
+        self.Move_btn.grid(row = 2, column = 1,padx=10, pady=10)
+        self.Get_Option()
+        self.day_option = ttk.Combobox(self.Control_Frame, values = self.Options)
+        self.day_option.grid(row = 2,column = 2)
+        self.Move_btn.config(command = self.MOVE)
+                    #### MTK Sync Buttons 
+
+
+        
+        #Add Mtk Sync Status 
+        self.sync_status = tk.IntVar()
+        self.sync_chbx = tk.Checkbutton(self.Control_Frame, variable =self.sync_status,
+                                        onvalue=1, offvalue=0, command = self.check_mtk_sync_status)
+        self.sync_chbx.grid(padx = 20,row = 3, column = 1)
+        self.rmchbox_label = tk.Label (self.Control_Frame,text = "MTK SYNC")
+        self.rmchbox_label.grid(row = 3, column = 2)
+        #Add Sync Button 
+        self.sync_ref_img = ImageTk.PhotoImage(Image.open(os.getcwd() + "/Pictures/sync_refresh.ico"))
+        self.SYNC_btn = tk.Button(master =self.Control_Frame, image  =  self.sync_ref_img , 
+                                  command = self.mtk_sync)
+        self.SYNC_btn.grid(padx = 20,row = 3, column = 3)
+        
+        #SEND OKRLOG
+        self.SEND_btn = tk.Button(self.Control_Frame, text = 'SEND PLAN',
+                                  font = ('times new roman',20))
+        self.SEND_btn.config(command = self._SEND)
+        self.SEND_btn.grid(row = 4,column = 2,padx=10, pady=10)
+        
+        ## Canvas Frame   
         try:
             self.CF_update(master= self.CF)
         except:
-            print("<WeekPlan> CF Fail to Initialize") 
-            
-        ## RCF Update:
-        try:
-            self.RCF_update(master = self.RF)
-        except:
-            print("<WeekPlan> RCF Fail to Initialize") 
-            
-        #Text ref is included
+            pass 

@@ -9,6 +9,7 @@ class GPK_Cache:
         self.__remember = False 
         self.save()
         
+    #Those were dedicated for account remembering
     def set_save_path(self,path):
         self.gpk_save_path = path
         
@@ -50,3 +51,4 @@ class GPK_Cache:
         else:
             self.Re_Fal()
         self.save()
+        

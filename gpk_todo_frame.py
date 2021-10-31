@@ -416,24 +416,29 @@ class gpk_to_do(tk.Frame):
             #3.Identify the tasks in the Archive, remove them from the PUSHLIST
             Analysis = DF_Analysis(PROFILE.todos.Archive)
             #Filter the Special Tasks:
-            IDs_Done = list(Analysis.Last_n_week(1)['ID'])
-            for Gtask in copy.copy(self.PUSHLIST):
-                if Gtask.ID[0] != 'R' and Gtask.ID in IDs_Done:
-                    self.PUSHLIST.remove(Gtask)
-                    print(f'Task ID {Gtask.ID} removed since recent completion')
-            #Filter the Recursive Tasks:
-            IDs_Done = list(Analysis.Last_n_day(0)['ID']) #Done Today
-            for Gtask in copy.copy(self.PUSHLIST):
-                if Gtask.ID in IDs_Done:
-                    self.PUSHLIST.remove(Gtask)
-                    print(f'Task ID {Gtask.ID} removed since recent completion')
-               
+            try:
+                IDs_Done = list(Analysis.Last_n_week(1)['ID']) 
+                for Gtask in copy.copy(self.PUSHLIST):
+                    if Gtask.ID[0] != 'R' and Gtask.ID in IDs_Done:
+                        self.PUSHLIST.remove(Gtask)
+                        print(f'Task ID {Gtask.ID} removed since recent completion')
+                #Filter the Recursive Tasks:
+                IDs_Done = list(Analysis.Last_n_day(0)['ID']) #Done Today
+                for Gtask in copy.copy(self.PUSHLIST):
+                    if Gtask.ID in IDs_Done:
+                        self.PUSHLIST.remove(Gtask)
+                        print(f'Task ID {Gtask.ID} removed since recent completion')
+            except: #When the archive is empty 
+                IDs_Done = []               
             #3.5: Identify the tasks in the todolist ,remove them from the PUSHLIST
-            IDs_exist = list(PROFILE.todos.todos['ID'])
-            for Gtask in copy.copy(self.PUSHLIST):
-                if Gtask.ID in IDs_exist:
-                    self.PUSHLIST.remove(Gtask)
-                    print(f'Task ID {Gtask.ID} removed since Existing Task')
+            try:
+                IDs_exist = list(PROFILE.todos.todos['ID'])
+                for Gtask in copy.copy(self.PUSHLIST):
+                    if Gtask.ID in IDs_exist:
+                        self.PUSHLIST.remove(Gtask)
+                        print(f'Task ID {Gtask.ID} removed since Existing Task')
+            except:#When there is Nothing in the todo
+                IDs_exist = [ ] 
             #4.Push all tasks from PUSHLIST into todo list (The method automatically filter same ID) 
             for Gtask in self.PUSHLIST:
                 PROFILE.todos.add_gpkTask(Gtask)

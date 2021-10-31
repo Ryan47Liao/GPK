@@ -7,6 +7,8 @@ from  tkinter import filedialog
 from tkinter import messagebox
 import os
 import Tetris
+import copy
+import numpy as np
 
 #Gpk Mods 
 from gpk_cache import GPK_Cache
@@ -15,16 +17,18 @@ from gpk_mtk_frame import gpk_mtk_frame
 from gpk_todo_frame import gpk_to_do
 from gpk_archive_frame import gpk_archive
 from gpk_stat_frame import gpk_analysis
-from gpk_weekView_frame import gpk_weekView,gpk_weekPlanning
+from gpk_weekView_frame import gpk_weekView,gpk_weekPlanning #2021/9/4
 from gpk_dashboard_frame import gpk_dash
 from gpk_recurrent import gpk_Recur_frame
 from gpk_Notion_frame import gpk_notion_frame
 from gpk_Misc_frame import gpk_misc #2021/7/24 
 from gpk_D_Reflection_frame import D_Reflection_Frame #2021/7/25
+from gpk_setting import gpk_setting #2021/09/13
+
 
 class gpk_Shell:
     def __init__(self):
-        self.version = '0.055' #2021/8/6
+        self.version = '0.071' #2021/10/25
         self.shell_rt = tk.Tk()
         self.shell_rt.title("GPK_LOGIN")
         self.shell_rt.geometry('1000x780')
@@ -179,7 +183,10 @@ the task will then be Archived into the Archive',ddl = ddl)
             self.file_path = path
         print(f"opening save at {self.file_path}")
         INfile = open( self.file_path ,"rb")
-        self.Profile = pickle.load(INfile)
+        try:
+            self.Profile = pickle.load(INfile)
+        except:
+            pass
         INfile.close()
         #Update User Name
         user_name = str(self.file_path).split('.')[0].split("gpk_saves")[-1].split('user_file')[0].strip('/_\\')
@@ -274,12 +281,23 @@ class gpk_Main():
         self.gpk_main_rt.iconbitmap(os.getcwd() + "\Pictures\GPK_OKR.ico")
         self.gpk_main_rt.option_add('*tearOff', False)
         self.gpk_main_rt.title("GPK_Main")
-        base = 120
-        width = base*16
-        height = base*9
-        self.gpk_main_rt.attributes("-fullscreen", True)  
-        self.geometry = {'width':width,'height':height}
-        self.gpk_main_rt.geometry('{}x{}'.format(width,height))
+        #Deciding Frame
+        base = 100
+        try:
+            auto_size = self.Profile.setting.screen_auto
+        except: #If gpk_setting was not there
+            self.Profile.setting = gpk_setting()
+            auto_size = self.Profile.setting.screen_auto
+        if auto_size:
+            self.Profile.setting.Auto_adjust(self.gpk_main_rt) #Fetch and record window settings 
+        #Fixed Size
+        zoom_ratio = self.Profile.setting.zoom_ratio
+        screen_width = int(self.Profile.setting.screen_width/self.Profile.setting.zoom_ratio)
+        screen_height = int(self.Profile.setting.screen_height/self.Profile.setting.zoom_ratio)
+        geometry = {'height':screen_height,'width':screen_width}
+ 
+        self.geometry = {'width':screen_width,'height':screen_height}
+        self.gpk_main_rt.geometry('{}x{}'.format(screen_width,screen_height))
         self.FRAMES = []
         
         #_________Finally_________#
@@ -334,6 +352,34 @@ class gpk_Main():
     def R_call_view(self,num):
         self.D_reflect.Call_view(num) 
         self.call_frame('D_reflect')
+        
+    def toggle_FS(self):
+            if self.FS.get():#Full Screen
+                self.gpk_main_rt.attributes("-fullscreen", True) 
+            else:
+                self.gpk_main_rt.attributes("-fullscreen", False) 
+            #Finally Remember the setting:
+            self.Profile.setting.FS_status = self.FS.get()
+            self.profile_save()
+            
+    def Res_Change(self,auto=False):#2021/10/25'
+        if auto:
+            self.Profile.setting.Auto_adjust(root = self.gpk_main_rt)
+        else:
+            res = self._res.get()
+            w = int(res.split('x')[0])
+            h = int(res.split('x')[1])
+            self.Profile.setting.change_size(w,h)
+            self.profile_save()
+            print(f'Change to Resolution: {w}x{h}')
+        self.gpk_main_rt.destroy()
+        self.__init__(self.Profile , self.file_path)
+        
+    def Zoom_Change(self):
+        self.Profile.setting.zoom_ratio = int(float(self._zoom.get()[:-1])/100)
+        self.profile_save()
+        self.gpk_main_rt.destroy()
+        self.__init__(self.Profile , self.file_path)
         
     def _draw(self):
         #++++++++++++++++++++++++++ＭＥＮＵ++++++++++++++++++++++++++++++++++++++#
@@ -418,7 +464,7 @@ class gpk_Main():
         menu_bar.add_cascade(menu=menu_OKR, label='OKR')
         menu_OKR.add_command(label='OKR Settings', command = lambda: self.call_frame('gpk_okr'))
         
-        self.gpk_okr = gpk_okr(self.gpk_main_rt)
+        self.gpk_okr = gpk_okr(self.gpk_main_rt)        
         self.FRAMES.append("gpk_okr")
         
         #_________________Menu->Add on________________
@@ -437,10 +483,49 @@ class gpk_Main():
                
         #_________________Menu->Exit________________________
         Exit = tk.Menu(menu_bar)
-        menu_bar.add_cascade(menu=Exit, label='Exit')
+        menu_bar.add_cascade(menu=Exit, label='Setting')
+                #Full Screen 2021.9.6
+        try:
+            self.FS = tk.BooleanVar()
+            status = self.Profile.setting.FS_status
+            self.FS.set(status)
+        except:
+            self.Profile.setting = gpk_setting()
+            self.FS.set(False)
+            self.profile_save()
+        if self.FS.get():
+            self.gpk_main_rt.attributes("-fullscreen", True) 
+        Exit.add_checkbutton(label = 'Full Screen', onvalue=1, offvalue=0, variable=self.FS,
+                             command = self.toggle_FS)
+                #Screen Size: 2021.10.25
+        Screen_Setting = tk.Menu(Exit)
+        Exit.add_cascade(menu=Screen_Setting, label=f'Resolution')
+        self.Profile.setting.Fetch_Resolutions()
+        
+        _count = 0
+        self._res = tk.StringVar()
+        self._res.set(f'{self.Profile.setting.screen_width} x {self.Profile.setting.screen_height}')
+        for res in self.Profile.setting.res_opt:
+            Screen_Setting.add_radiobutton(label= res, variable = self._res,
+                                           command = self.Res_Change )
+        Screen_Setting.add_radiobutton(label= 'Auto', command = lambda: self.Res_Change(auto = True))
+                #Zoom Level: 2021.10.25
+        self._zoom = tk.StringVar()
+        self._zoom.set(str(self.Profile.setting.zoom_ratio*100)+'%')
+        Zoom_Setting = tk.Menu(Exit)
+        Exit.add_cascade(menu=Zoom_Setting, label=f'Zoom In')
+        for zoom in np.linspace(100,250,7):
+            Zoom_Setting.add_radiobutton(label= str(zoom)+'%', variable = self._zoom,
+                                           command = self.Zoom_Change )
+            
+            
             
         Exit.add_command(label='Main Menu', command = self.RETURN)
         Exit.add_command(label='QUIT', command =  self.gpk_main_rt.destroy)
+        
+
+        
+
         
         #++++++++++++++++++++++++++DashBoard(HOME)++++++++++++++++++++++++++++++++++++++#
         # self.gpk_dash_board = gpk_dash(self.gpk_main_rt,self.geometry,callback = self.Profile_call_back)

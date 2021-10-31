@@ -51,7 +51,12 @@ class gpk_task(task):
             self.category = 'Recurrent'
         elif category.upper() == 'P':
             self.category = 'Priority'
-        section = int(self.ID.split("_")[1][1])
+        try:
+            section = int(self.ID.split("_")[1][1])
+        except:
+            from tkinter import messagebox
+            messagebox.showerror(title = 'ID Error',
+                                 message = f'ID {self.ID} does not follow format: S_G??-??_K??') 
         self.section = self.SECTIONs[section]
         self.Kr_Id = self.ID.split("_")[2][-1]
         

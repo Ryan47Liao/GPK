@@ -109,6 +109,10 @@ class TkProgress(tk.Toplevel):
                     if p in D_temp:
                         if D_temp[p]['type'] == 'number':
                             content = D_temp[p]['number']
+                            try:
+                                content = float(content)
+                            except:
+                                content = 0
                         elif D_temp[p]['type'] == 'select':
                             content = D_temp[p]['select']['name']
                         elif D_temp[p]['type'] == 'rich_text':
@@ -156,7 +160,10 @@ class TkProgress(tk.Toplevel):
         todo_stack = []
         for task in tasks_res['results']:
             todo_stack.append(remember(temp_f,task))
-        step = 1/len(todo_stack)
+        try:
+            step = 1/len(todo_stack)
+        except ZeroDivisionError: 
+            pass 
         ###Execution:
         for f in todo_stack:
             f()
@@ -196,7 +203,11 @@ class TkProgress(tk.Toplevel):
         n_tasks =   len(res['results'])
         if True:
             self.count = 0
-            df =self.DB_to_df(res,Profile)
+            df = self.DB_to_df(res,Profile)
+            try:
+                df['Hours'] = [0 if math.isnan(t) else t for t in df['Hours'] ] #Fix Nans 2021-08-25
+            except KeyError: #Empty case when notion db is empty 2021-09-14
+                pass 
             #Refresh Page
             self.header.set( 'Step 3: Pushing Tasks to Notion from GPK')
             self.description.set("")
@@ -286,7 +297,10 @@ class TkProgress(tk.Toplevel):
                     except:
                         print(f"Fail to Post Task {Gtask_Gpk.ID}")
                 #Updating:
-                self.description.set( f"Task ID {Gtask_Gpk.ID} pushed to notion" + '\n' + str(Gtask_Gpk))
+                try:
+                    self.description.set( f"Task ID {Gtask_Gpk.ID} pushed to notion" + '\n' + str(Gtask_Gpk))
+                except:
+                    self.description.set('--DISPLAY ERROR--')
                 self.count += 1/len(Existing_Tasks)
                 self.PG_ref()
                 

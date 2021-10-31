@@ -57,14 +57,25 @@ class PROFILE:
         else:
             return False
 
-    def Save(self,file_path)->None:
+    def Save(self,file_path)->None: #Updated 2021/09/13 for safe saves
         if file_path.split(".")[-1] == "gpk":
-            OUTfile = open(file_path ,"wb")
-            pickle.dump(self,OUTfile)
-            OUTfile.close()
+            #TEST SAVE:
+            with open('test_save','wb') as OUTfile:
+                try:
+                    pickle.dump(self,OUTfile)
+                    __Allow_save = True
+                except:
+                    __Allow_save = False
+                    import tkinter as tk
+                    tk.messagebox.showwarning(title = 'WARNING!!!Save Fatal Error!!!'
+                                              , message = 'CLOSE PROGRAM IMMEDIATELY or YOU MAY LOSE ALL SAVEs')
+            #ACTUAL SAVE
+            with open(file_path ,"wb") as OUTfile:
+                pickle.dump(self,OUTfile)
         else:
             print("Error.File must be gpk file.")
-            
+            tk.messagebox.showwarning(title = 'Format Error'
+                                              , message = 'File must be gpk file.')
         
 
 class Gpk_ToDoList:
@@ -120,6 +131,8 @@ class Gpk_ToDoList:
     
     def Reward(self,time,difficulty):
         "Return Rewards Based on Time and Difficulty"
+        time = float(time)
+        difficulty = float(difficulty)
         time_lower_bound = 0.35
         time_upper_bound = 5
         difficulty_upper_bound = 10
@@ -131,7 +144,11 @@ class Gpk_ToDoList:
             difficulty = difficulty_upper_bound
         difficulty = abs(difficulty)
         reward = 3*(time**0.6*difficulty**0.4) + random.choice([-0.5,0,0.5,1,1.5,2])
-        return(round(reward))
+        try:
+            out = round(reward)
+        except:
+            out = 0
+        return(out)
     
     def idx_reset(self,df):
         df = df.reset_index()
